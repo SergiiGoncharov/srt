@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload .srt file to get words statistics</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+    }
+    #file-input {
+        display: none;
+    }
+    .btn {
+        background-color: #007bff;
+        color: #fff;
+        padding: 10px 20px;
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+    }
+    .btn:hover {
+        background-color: #0056b3;
+    }
+</style>
+</head>
+<body>
+
+<h2>File Processing</h2>
+
+<div>
+    <input type="file" id="file-input" accept=".srt">
+    <label for="file-input" class="btn">Upload SRT File</label>
+</div>
+
+<div id="result" style="display: none;">
+    <h3>Processed File:</h3>
+    <a id="download-link" class="btn" download="processed_file.csv">Download Processed File</a>
+</div>
+
+<script>
+    document.getElementById('file-input').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const words = text.trim().replace(/([^a-zA-Z' ])+/g, ' ').split(/\s+/).map(s => s.charAt(0).toUpperCase() + s.slice(1));
+            const map = new Map();
+            
+            words.forEach(word => {
+                if (word === '') return;
+                map.set(word, (map.get(word) || 0) + 1);
+            });
+
+            const sortedByFrequency = Array.from(map).sort(([,a], [,b]) => b - a);
+            const csv = sortedByFrequency.reduce((prev, curr) => {
+                return prev + `\n${curr[0]},${curr[1]}`;
+            }, 'Word,Frequency');
+
+            const downloadLink = document.getElementById('download-link');
+            downloadLink.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+            document.getElementById('result').style.display = 'block';
+        };
+
+        reader.readAsText(file);
+    });
+</script>
+
+</body>
+</html>
